@@ -175,7 +175,7 @@ var findPersonById = function(personId, done) {
     if(err) return done(err);
     done(null, result);
   })
-};
+};           
 
 /** # CR[U]D part III - UPDATE # 
 /*  ============================ */
@@ -204,12 +204,20 @@ var findPersonById = function(personId, done) {
 
 var findEditThenSave = function(personId, done) {
   var foodToAdd = 'hamburger';
-  this.findPersonById(personId , ( err , person) => {
-   person.favoriteFoods.push(foodToAdd)
-   person.update()
-   if(err) return done(err);
-   done(null,person)
+  Person.findById({ _id : personId}, {new : true} , (err , data) => {
+    if(err) return done(err);
+    //console.log(data.favoriteFoods)
+    data.favoriteFoods.push(foodToAdd);
+    data.save( (err , updated) => {
+      if(err) return done(err);
+      done(null,updated)
+      //console.log(updated)
+    } );
+
   })
+
+  
+  
 };
 
 /** 9) New Update : Use `findOneAndUpdate()` */
@@ -229,8 +237,12 @@ var findEditThenSave = function(personId, done) {
 
 var findAndUpdate = function(personName, done) {
   var ageToSet = 20;
+  Person.findOneAndUpdate({name : personName} , { age : ageToSet} , {new : true} , (err , data) => {
+    if(err) return done(err);
+     done(null,data);
+  })
 
-  done(null/*, data*/);
+  
 };
 
 /** # CRU[D] part IV - DELETE #
@@ -244,8 +256,10 @@ var findAndUpdate = function(personName, done) {
 // As usual, use the function argument `personId` as search key.
 
 var removeById = function(personId, done) {
-  
-  done(null/*, data*/);
+  Person.findOneAndRemove({ _id : personId} , (err , data) => {
+    if(err) return done(err);
+    done(null, data)
+  })
     
 };
 
@@ -262,7 +276,11 @@ var removeById = function(personId, done) {
 var removeManyPeople = function(done) {
   var nameToRemove = "Mary";
 
-  done(null/*, data*/);
+  Person.remove({ name : nameToRemove} , (err , data) => {
+    if(err) return done(err);
+    done(null,data)
+  })
+
 };
 
 /** # C[R]UD part V -  More about Queries # 
@@ -285,8 +303,14 @@ var removeManyPeople = function(done) {
 
 var queryChain = function(done) {
   var foodToSearch = "burrito";
-  
-  done(null/*, data*/);
+    Person.find({ favoriteFoods : foodToSearch})
+    .sort({age : 1})
+    .limit(2)
+    .select({age : 0})
+    .exec( (err,data) => {
+      if(err) return done(err)
+      done(null,data)
+    })
 };
 
 /** **Well Done !!**
