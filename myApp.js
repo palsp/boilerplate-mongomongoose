@@ -9,10 +9,13 @@
 /** 1) Install & Set up mongoose */
 
 // Add mongodb and mongoose to the project's package.json. Then require 
+ var mongoose = require('mongoose');
 // mongoose. Store your Mongo Atlas database URI in the private .env file 
+process.env.MONGO_URI
+='mongodb+srv://palsp:liulaks123@cluster0.fzc2c.mongodb.net/<dbname>?retryWrites=true&w=majority'
 // as MONGO_URI. Connect to the database using the following syntax:
 //
-// mongoose.connect(<Your URI>, { useNewUrlParser: true, useUnifiedTopology: true }); 
+ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true }); 
 
 
 
@@ -20,6 +23,7 @@
 /*  ====================== */
 
 /** 2) Create a 'Person' Model */
+
 
 // First of all we need a **Schema**. Each schema maps to a MongoDB collection
 // and defines the shape of the documents within that collection. Schemas are
@@ -40,8 +44,15 @@
 // `default` values. See the [mongoose docs](http://mongoosejs.com/docs/guide.html).
 
 // <Your code here >
+var Schema = mongoose.Schema;
+var personSchema = new Schema({
+  name : {type : String , required : true} ,
+  age : Number,
+  favoriteFoods : [String]
+});
+const Person = new mongoose.model("Person" , personSchema);
 
-var Person /* = <Your Model> */
+
 
 // **Note**: Glitch is a real server, and in real servers interactions with
 // the db are placed in handler functions, to be called when some event happens
@@ -79,8 +90,14 @@ var Person /* = <Your Model> */
 // });
 
 var createAndSavePerson = function(done) {
-  
-  done(null /*, data*/);
+  var pal = new Person({
+    name : 'pal',age : 20, favoriteFoods : ['pizza']
+  })
+  pal.save(function( err , data ){
+    if(err) return done(err);
+     done(null , data);
+  })
+
 
 };
 
@@ -94,10 +111,16 @@ var createAndSavePerson = function(done) {
 // 'arrayOfPeople'.
 
 var createManyPeople = function(arrayOfPeople, done) {
-    
-    done(null/*, data*/);
-    
-};
+    arrayOfPeople.forEach(function( item , index , array){
+      console.log(item,index)
+      var doc = new Person(item)
+      doc.save( function(err , data){
+        if(err) return done(err);
+        done(null,data);
+      })
+    })
+  }
+//};
 
 /** # C[R]UD part II - READ #
 /*  ========================= */
@@ -111,8 +134,11 @@ var createManyPeople = function(arrayOfPeople, done) {
 // Use the function argument `personName` as search key.
 
 var findPeopleByName = function(personName, done) {
-  
-  done(null/*, data*/);
+  mongoose.model('Person').find({ name : personName} , function( err , personFound) {
+    if(err) return done(err);
+    console.log(personFound)
+    done(null , personFound)
+  }) 
 
 };
 
@@ -126,8 +152,12 @@ var findPeopleByName = function(personName, done) {
 // argument `food` as search key
 
 var findOneByFood = function(food, done) {
+  Person.findOne( { favoriteFoods : food} , function( err , result){
+    if(err) return done(err);
+    done(null, result);
+  }
+  )
 
-  done(null/*, data*/);
   
 };
 
@@ -141,9 +171,10 @@ var findOneByFood = function(food, done) {
 // Use the function argument 'personId' as search key.
 
 var findPersonById = function(personId, done) {
-  
-  done(null/*, data*/);
-  
+  Person.findById({ _id : personId} , function( err , result){
+    if(err) return done(err);
+    done(null, result);
+  })
 };
 
 /** # CR[U]D part III - UPDATE # 
@@ -173,8 +204,12 @@ var findPersonById = function(personId, done) {
 
 var findEditThenSave = function(personId, done) {
   var foodToAdd = 'hamburger';
-  
-  done(null/*, data*/);
+  this.findPersonById(personId , ( err , person) => {
+   person.favoriteFoods.push(foodToAdd)
+   person.update()
+   if(err) return done(err);
+   done(null,person)
+  })
 };
 
 /** 9) New Update : Use `findOneAndUpdate()` */
